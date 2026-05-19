@@ -1,0 +1,128 @@
+#include "battle.h"
+#include "parser.h"
+
+int main(){
+    // all battles storage
+    int max_battles = MAX_BATTLES;
+    
+    Battle_record *battle_records = malloc(sizeof(*battle_records) * max_battles);
+    if (!battle_records) {
+        printf("malloc failed\n");
+        return 1;
+    }
+
+    memset(battle_records, 0, sizeof(*battle_records) * MAX_BATTLES);
+
+
+    int battle_count = 0;
+    Battle_record *current = NULL;
+
+    char path_combat[PATH_LEN];
+
+    if (!find_last_folder("C:\\Users\\denwo\\AppData\\Local\\Targem\\Crossout\\logs", path_combat, PATH_LEN)){
+        printf("No folder found\n");
+        return 1;
+    }
+
+    printf("%s\n", path_combat);
+    
+    FILE *file = fopen(path_combat, "r");
+    if (!file) {
+        printf("Error: cant open file\n");
+        free(battle_records);
+        return 1;
+    }
+
+    char line[LINE_LEN];
+
+    int empty_reads = 0;
+
+    while (1) {
+        if(fgets(line, sizeof(line), file)){
+            
+
+            line[strcspn(line, "\n")] = 0;
+
+            Event event = identify_line(line);
+
+            // GAMEPLAY START
+            if (event.type == EVENT_TYPE_GAMEPLAY_START) {
+
+                if (current != NULL) {
+                    printf("Warning: START without END\n");
+                    //save current battle()
+                    battle_count++; 
+                }
+                if (battle_count >= max_battles) {
+                    int old_size = max_battles;
+                    max_battles *= 2;
+
+                    Battle_record *tmp = realloc(battle_records, sizeof(*battle_records) * max_battles);
+                    if (!tmp) {
+                        printf("realloc failed\n");
+                        free(battle_records);
+                        return 1;
+                    }
+
+                    battle_records = tmp;
+
+                    memset(&battle_records[old_size], 0, sizeof(*battle_records) * (max_battles - old_size));
+                }
+
+                current = &battle_records[battle_count];
+                memset(current, 0, sizeof(Battle_record));
+                process_event(current, &event);
+                
+                /*
+                //debug
+                printf("===== Gameplay '%s' started, map '%s' battle count '%d'======\n", 
+                    current->battle_type, 
+                    current->map_name, 
+                    battle_count);
+                */
+            }
+
+            // GAMEPLAY END
+            else if (event.type == EVENT_TYPE_GAMEPLAY_END) {
+
+                if (current != NULL) {
+                    process_event(current, &event);
+
+                    print_battle(current);
+
+                    battle_count++;
+                    current = NULL;
+                }
+                
+            }
+
+            // NORMAL EVENTS
+            else {
+                if (current != NULL) {
+                    process_event(current, &event);
+                }
+            }
+
+            // -------- DEBUG OUTPUT (optional)
+        }
+        else{
+            Sleep(1000);
+            clearerr(file);
+
+            empty_reads++;
+
+            if (empty_reads > 50) {
+                printf("waiting for log...\n");
+                empty_reads = 0;
+            }
+        }
+    }
+
+    
+    fclose(file);
+
+    
+
+    free(battle_records);
+    return 0;
+}
