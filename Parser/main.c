@@ -18,20 +18,53 @@ int main(){
     Battle_record *current = NULL;
 
     char path_combat[PATH_LEN];
+    FILE *file = NULL;
 
-    if (!find_last_folder("C:\\Users\\denwo\\AppData\\Local\\Targem\\Crossout\\logs", path_combat, PATH_LEN)){
-        printf("No folder found\n");
-        return 1;
+    while(file == NULL){
+        int choice;
+
+        printf("\n1 - auto find log\n");
+        printf("2 - manual path\n");
+        printf("choose: ");
+        scanf("%d", &choice);
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+
+
+        if(choice == 1){
+            if (!find_last_folder("C:\\Users\\denwo\\AppData\\Local\\Targem\\Crossout\\logs", path_combat, PATH_LEN)){
+                printf("No folder found\n");
+                continue;
+            }
+
+            file = fopen(path_combat, "r");
+
+            if (!file) {
+                printf("Can't open auto log\n");
+            }
+        }
+        
+        else if(choice == 2){
+
+            printf("Enter full path: ");
+            fgets(path_combat, PATH_LEN, stdin);
+            path_combat[strcspn(path_combat, "\n")] = 0;
+
+            file = fopen(path_combat, "r");
+
+            if (!file) {
+                printf("Can't open file\n");
+            }
+        }
+
+        else {
+            printf("Wrong choice\n");
+        }
+
     }
 
     printf("%s\n", path_combat);
     
-    FILE *file = fopen(path_combat, "r");
-    if (!file) {
-        printf("Error: cant open file\n");
-        free(battle_records);
-        return 1;
-    }
 
     char line[LINE_LEN];
 
