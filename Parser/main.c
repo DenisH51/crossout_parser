@@ -2,6 +2,8 @@
 #include "parser.h"
 
 int main(){
+
+
     // all battles storage
     int max_battles = MAX_BATTLES;
     
@@ -16,6 +18,11 @@ int main(){
 
     int battle_count = 0;
     Battle_record *current = NULL;
+
+
+
+
+    //find combat.log 1 automaticly 2 manual
 
     char path_combat[PATH_LEN];
     FILE *file = NULL;
@@ -63,9 +70,12 @@ int main(){
 
     }
 
-    printf("%s\n", path_combat);
+    printf("Open file by path: %s\n", path_combat);
     
 
+
+
+    //read by line
     char line[LINE_LEN];
 
     int empty_reads = 0;
@@ -151,7 +161,6 @@ int main(){
         }
     }
 
-    
     fclose(file);
 
     

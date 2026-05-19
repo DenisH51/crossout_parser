@@ -21,6 +21,9 @@
     #define MAX_EVENTS 4096
     #define MAX_WEAPONS 16
     #define MAX_BATTLES 50 //creat with malloc 
+ 
+    #define MAX_CRAFTS 16
+    #define MAX_MAPS 64
 
     /*The parser is based on a Battle structure that stores the full match data, including map info, players,
     weapons, and a list of raw log events. Each line of the log is converted into an Event (Damage, Spawn, Score, etc.),
@@ -177,5 +180,59 @@
         Player players[MAX_PLAYERS];
         int player_count;
     } Battle_record;
+
+    //---------------------global statistic for all battles------------------
+    typedef struct {
+
+        char name[WEAPON_LEN];
+
+        int battles;
+
+        int wins;
+        int losses;
+
+        double avg_damage;
+        double avg_received;
+
+        int avg_score;
+        int avg_hits;
+
+    } GlobalCraftStat;
+
+    typedef struct {
+
+        char name[MAP_LEN];
+
+        int battles;
+
+        int wins;
+        int losses;
+
+    } GlobalMapStat;
+
+    typedef struct {
+
+        char nickname[NAME_LEN];
+
+        int battles;
+
+        int wins;
+        int losses;
+
+        // crafts
+        GlobalCraftStat crafts[MAX_CRAFTS];
+        int craft_count;
+
+        // maps
+        GlobalMapStat maps[MAX_MAPS];
+        int map_count;
+
+    } GlobalPlayerStat;
+
+
+
+
+
+
 
     #endif
