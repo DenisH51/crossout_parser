@@ -11,3 +11,5 @@ void process_event(Battle_record *battle, Event *event);
 void print_battle(Battle_record *battle);
 
 int find_last_folder(const char *base_path, char *out_path, int max_len);
+
+void update_global_stats(GlobalStats *global, const Battle_record *battle);

@@ -2,22 +2,35 @@
 #include "parser.h"
 
 int main(){
-
-
     // all battles storage
     int max_battles = MAX_BATTLES;
     
     Battle_record *battle_records = malloc(sizeof(*battle_records) * max_battles);
     if (!battle_records) {
-        printf("malloc failed\n");
-        return 1;
+        printf("Memory error: cannot expand battles array\n");
+        return -1;
     }
 
     memset(battle_records, 0, sizeof(*battle_records) * MAX_BATTLES);
 
-
+    //temorary batle use to update current buttle
     int battle_count = 0;
     Battle_record *current = NULL;
+
+
+    // create dinamic array for store statistic for all players 
+    GlobalStats global_stat = {0};
+
+    global_stat.capacity = MAX_PLAYERS_OVERALL;
+    global_stat.player_count = 0;
+
+    global_stat.players = malloc(sizeof(GlobalPlayerStat) * global_stat.capacity);
+
+    if (!global_stat.players) {
+        printf("Memory error: cannot expand players array\n");
+        return -1;
+    }
+
 
 
 
@@ -72,6 +85,7 @@ int main(){
 
     printf("Open file by path: %s\n", path_combat);
     
+
 
 
 
@@ -131,6 +145,8 @@ int main(){
                 if (current != NULL) {
                     process_event(current, &event);
 
+                    update_global_stats(&global_stat, current);
+
                     print_battle(current);
 
                     battle_count++;
@@ -148,6 +164,8 @@ int main(){
 
             // -------- DEBUG OUTPUT (optional)
         }
+
+        //wait for update 
         else{
             Sleep(1000);
             clearerr(file);

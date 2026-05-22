@@ -168,7 +168,7 @@ void print_team(Battle_record *battle, const int team){
     printf("\n");
 }
 
-Player* find_player(Battle_record *battle, int player_id){   //return adress to found player if no return null
+Player* find_player(Battle_record *battle, int player_id){//return adress to found player if no return null
     for (int i = 0; i < battle->player_count; i++) {
         if (battle->players[i].player_id == player_id) {
             return &battle->players[i];
@@ -197,6 +197,38 @@ WeaponStat* find_weapon(Player *player, const char target_name[WEAPON_LEN]){
 
     return NULL;
 }
+
+
+
+
+
+//function for global stat
+
+GlobalPlayerStat* find_player_global(GlobalStats *global, const char target_name[NAME_LEN]){
+    for(int i = 0; i < global->player_count; i++){
+        if(strcmp(global->players[i].nickname, target_name) == 0){
+            return &global->players[i];
+        }
+
+    }
+
+    return NULL;
+}
+
+GlobalMapStat* find_map_global(GlobalPlayerStat *players, const char target_map[MAP_LEN]){
+    for(int i = 0; i < players->map_count; i++){
+        if(strcmp(players->maps[i].name, target_map) == 0){
+            return &players->maps[i];
+        }
+
+    }
+
+    return NULL;
+}
+
+GlobalCraftStat* find_craft_global(GlobalPlayerStat *player);
+
+
 
 
 //-----------main process function-----------------------
@@ -363,7 +395,242 @@ void process_score(Battle_record *battle, Event *event){
     p->score += event->data.score.value;
 }
 
+void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
+    for(int i = 0; i < battle->player_count; i++){
+        //find record by nickname
+        const char *target_name = battle->players[i].nickname;
+
+        GlobalPlayerStat *found_player = find_player_global(global, target_name);
+        
+
+        //if player not found -> create player
+        if(found_player == NULL){
+            //try to expand array
+            if(global->player_count >= global->capacity){
+                int new_capacity = global->capacity * 2;
+
+                GlobalPlayerStat *tmp =realloc(global->players, sizeof(GlobalPlayerStat) * new_capacity);
+
+                if (tmp == NULL) {
+                    printf("Failed to expand players array\n");
+                    return;
+                }
+
+                global->players = tmp;
+                global->capacity = new_capacity;
+            }
+            
+            //create new player
+            found_player = &global->players[global->player_count];
+            memset(found_player, 0, sizeof(*found_player));
+
+            safe_copy_str(found_player->nickname, battle->players[i].nickname, NAME_LEN);
+
+            global->player_count++;
+        }
+            
+        //update data
+        found_player->battles++;
+
+        if(battle->winner_team == battle->players[i].team){
+            found_player->wins++;
+        }
+        else{
+            found_player->losses++;
+        }
+    
+
+        found_player->score += battle->players[i].score;
+
+        found_player->total_damage += battle->players[i].damage_dealt;
+        found_player->total_received += battle->players[i].damage_received;
+
+        found_player->total_kill += battle->players[i].kills;
+        found_player->total_death += battle->players[i].deaths;
+
+        
+
+        //find map by name
+        const char *target_map = battle->map_name;
+
+        GlobalMapStat *found_map = find_map_global(found_player, target_map);
+        
+        //if found map
+        if(found_map != NULL){
+            //update data
+            found_map->battles++;
+            
+            if(battle->players[i].team == battle->winner_team){
+                found_map->wins++;
+            }
+            else{
+                found_map->losses++;
+            }
+        }
+        //create new map
+        else{
+            if(found_player->map_count >= MAX_MAPS){
+                continue;
+            }
+            GlobalMapStat *new_map = &found_player->maps[found_player->map_count];
+
+            memset(new_map, 0, sizeof(*new_map));
+
+            safe_copy_str(new_map->name, battle->map_name, MAP_LEN - 1);
+
+            new_map->battles = 1;
+
+            if (battle->winner_team == battle->players[i].team) {
+                new_map->wins = 1;
+            }
+            else {
+                new_map->losses = 1;
+            }
+
+            found_player->map_count++;
+            
+            //find craft by name
+            //create set of weapons by weapons list, created set inside sort A-Z 
+            GlobalCraftStat temp_craft = create_craft_global(battle->players[i], weapons_list);
+
+            //find neccesery craft 
+            GlobalCraftStat *found_craft = find_craft_global(found_player, temp_craft);
+
+            //if craft not found -> create 
+
+
+
+            //update data 
+        }
+    }
+}
+
+
+
+
+/*
+void update_global_stats(GlobalStats *global,
+                         const Battle_record *battle)
+{
+    for (int i = 0; i < battle->player_count; i++) {
+
+        Player *battle_player = &battle->players[i];
+
+        //-----------------------------------
+        // FIND PLAYER
+        //-----------------------------------
+
+        GlobalPlayerStat *found_player =
+            find_player_global(global,
+                               battle_player->nickname);
+
+        //-----------------------------------
+        // CREATE PLAYER IF NOT FOUND
+        //-----------------------------------
+
+        if (found_player == NULL) {
+
+            if (global->player_count >= MAX_PLAYERS_OVERALL) {
+                printf("Global player limit reached\n");
+                return;
+            }
+
+            found_player =
+                &global->players[global->player_count];
+
+            memset(found_player, 0, sizeof(*found_player));
+
+            strncpy(found_player->nickname,
+                    battle_player->nickname,
+                    NAME_LEN - 1);
+
+            found_player->nickname[NAME_LEN - 1] = '\0';
+
+            global->player_count++;
+        }
+
+        //-----------------------------------
+        // UPDATE PLAYER STATS
+        //-----------------------------------
+
+        found_player->battles++;
+
+        if (battle->winner_team == battle_player->team) {
+            found_player->wins++;
+        }
+        else {
+            found_player->losses++;
+        }
+
+        found_player->total_damage += battle_player->damage_dealt;
+
+        found_player->total_received += battle_player->received_damage;
+
+        found_player->total_score += battle_player->score;
+
+        found_player->total_kills += battle_player->kills;
+
+        found_player->total_deaths += battle_player->deaths;
+
+        //-----------------------------------
+        // MAP STATS
+        //-----------------------------------
+
+        GlobalMapStat *found_map =
+            find_map_global(found_player,
+                            battle->map_name);
+
+        //-----------------------------------
+        // UPDATE MAP
+        //-----------------------------------
+
+        if (found_map != NULL) {
+
+            found_map->battles++;
+
+            if (battle->winner_team == battle_player->team) {
+                found_map->wins++;
+            }
+            else {
+                found_map->losses++;
+            }
+        }
+
+        //-----------------------------------
+        // CREATE MAP
+        //-----------------------------------
+
+        else {
+
+            if (found_player->map_count >= MAX_MAPS) {
+                continue;
+            }
+
+            GlobalMapStat *new_map =
+                &found_player->maps[found_player->map_count];
+
+            memset(new_map, 0, sizeof(*new_map));
+
+            strncpy(new_map->name,
+                    battle->map_name,
+                    MAP_LEN - 1);
+
+            new_map->name[MAP_LEN - 1] = '\0';
+
+            new_map->battles = 1;
+
+            if (battle->winner_team == battle_player->team) {
+                new_map->wins = 1;
+            }
+            else {
+                new_map->losses = 1;
+            }
+
+            found_player->map_count++;
+        }
+    }
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------
 
 
