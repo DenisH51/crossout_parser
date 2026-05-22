@@ -19,7 +19,7 @@
 
     #define MAX_PLAYERS 64
     #define MAX_EVENTS 4096
-    #define MAX_WEAPONS 16
+    #define MAX_WEAPONS 64
     #define MAX_BATTLES 50 //creat with malloc 
  
     #define MAX_CRAFTS 16
@@ -195,6 +195,7 @@
     typedef struct {
 
         GlobalWeaponStat weapons[MAX_WEAPONS];
+        int weapons_count;
 
         int battles;
 

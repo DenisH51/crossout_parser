@@ -226,7 +226,88 @@ GlobalMapStat* find_map_global(GlobalPlayerStat *players, const char target_map[
     return NULL;
 }
 
-GlobalCraftStat* find_craft_global(GlobalPlayerStat *player);
+
+bool is_rubish(const char *name){
+    if (!name)
+        return true;
+
+    if (strstr(name, "Wheel") ||
+        strstr(name, "Track") ||
+        strstr(name, "Bumper") ||
+        strstr(name, "CarPart_Junk") ||
+        strstr(name, "Cabin")|| 
+        strstr(name, "Structure")){
+        return true;
+    }
+
+    return false;
+}
+
+void sort_wepons_in_craft(GlobalCraftStat *craft){
+    for(int i = 0; i < craft->weapons_count - 1; i++){
+
+        for(int j = i + 1; j < craft->weapons_count; j++){
+
+            if(strcmp(craft->weapons[i].name, craft->weapons[j].name) > 0){
+
+                //swap
+                GlobalWeaponStat tmp = craft->weapons[i];
+                craft->weapons[i] = craft->weapons[j];
+                craft->weapons[j] = tmp;
+            }
+        }
+    }
+}
+
+GlobalWeaponStat* find_global_weapon(GlobalCraftStat *temp_craft, const char target[NAME_LEN], int max){
+    for(int i = 0; i < max; i++){
+        if(strcmp(temp_craft->weapons[i].name, target) == 0){
+            return &temp_craft->weapons[i];
+        }
+    }
+
+    return NULL;
+}
+
+void create_craft_global(GlobalCraftStat *temp_craft, const Player *player){
+    if (!temp_craft || !player){
+        return;
+    }
+        
+    memset(temp_craft, 0, sizeof(*temp_craft));
+
+    temp_craft->weapons_count = 0;
+
+
+    //make a list with gun
+    for(int i = 0; i < player->weapon_count; i++){
+        if(is_rubish(player->weapons[i].name) == false){
+
+            if (temp_craft->weapons_count >= MAX_WEAPONS){
+                break;
+            }
+
+            GlobalWeaponStat *found_weapon = find_global_weapon(temp_craft, player->weapons[i].name, temp_craft->weapons_count);
+
+            //weapon not found
+            if(found_weapon == NULL){
+                //create weapon in player
+                found_weapon = &temp_craft->weapons[temp_craft->weapons_count];
+                memset(found_weapon, 0, sizeof(*found_weapon));
+                safe_copy_str(found_weapon->name, player->weapons[i].name, WEAPON_LEN);
+                temp_craft->weapons_count++;
+                
+            }
+
+            //update weapon data
+            found_weapon->total_damage = player->weapons[i].total_damage;
+
+            //buble sort
+            sort_wepons_in_craft(temp_craft);
+            
+        }
+    }
+}
 
 
 
@@ -430,7 +511,7 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
             global->player_count++;
         }
             
-        //update data
+        //update data for player
         found_player->battles++;
 
         if(battle->winner_team == battle->players[i].team){
@@ -451,7 +532,9 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
         
 
-        //find map by name
+
+
+        //find map by name------------------------------------
         const char *target_map = battle->map_name;
 
         GlobalMapStat *found_map = find_map_global(found_player, target_map);
@@ -490,12 +573,21 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
             found_player->map_count++;
             
-            //find craft by name
-            //create set of weapons by weapons list, created set inside sort A-Z 
-            GlobalCraftStat temp_craft = create_craft_global(battle->players[i], weapons_list);
+
+
+            //find craft by name----------------------------------------------
+            //create set of weapons by cheking is gun, created set inside sort A-Z 
+            GlobalCraftStat temp_craft = {0};
+            create_craft_global(&temp_craft, &battle->players[i]);
+
+            printf("name: '%s'  \n", target_name);
+            for(int i = 0; i < temp_craft.weapons_count; i++){
+                printf("              '%s'                 '%9f'\n", temp_craft.weapons[i].name, temp_craft.weapons[i].total_damage);
+            }
+            printf("\n");
 
             //find neccesery craft 
-            GlobalCraftStat *found_craft = find_craft_global(found_player, temp_craft);
+            //GlobalCraftStat *found_craft = find_craft_global(found_player, temp_craft);
 
             //if craft not found -> create 
 
@@ -509,128 +601,7 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
 
 
-/*
-void update_global_stats(GlobalStats *global,
-                         const Battle_record *battle)
-{
-    for (int i = 0; i < battle->player_count; i++) {
 
-        Player *battle_player = &battle->players[i];
-
-        //-----------------------------------
-        // FIND PLAYER
-        //-----------------------------------
-
-        GlobalPlayerStat *found_player =
-            find_player_global(global,
-                               battle_player->nickname);
-
-        //-----------------------------------
-        // CREATE PLAYER IF NOT FOUND
-        //-----------------------------------
-
-        if (found_player == NULL) {
-
-            if (global->player_count >= MAX_PLAYERS_OVERALL) {
-                printf("Global player limit reached\n");
-                return;
-            }
-
-            found_player =
-                &global->players[global->player_count];
-
-            memset(found_player, 0, sizeof(*found_player));
-
-            strncpy(found_player->nickname,
-                    battle_player->nickname,
-                    NAME_LEN - 1);
-
-            found_player->nickname[NAME_LEN - 1] = '\0';
-
-            global->player_count++;
-        }
-
-        //-----------------------------------
-        // UPDATE PLAYER STATS
-        //-----------------------------------
-
-        found_player->battles++;
-
-        if (battle->winner_team == battle_player->team) {
-            found_player->wins++;
-        }
-        else {
-            found_player->losses++;
-        }
-
-        found_player->total_damage += battle_player->damage_dealt;
-
-        found_player->total_received += battle_player->received_damage;
-
-        found_player->total_score += battle_player->score;
-
-        found_player->total_kills += battle_player->kills;
-
-        found_player->total_deaths += battle_player->deaths;
-
-        //-----------------------------------
-        // MAP STATS
-        //-----------------------------------
-
-        GlobalMapStat *found_map =
-            find_map_global(found_player,
-                            battle->map_name);
-
-        //-----------------------------------
-        // UPDATE MAP
-        //-----------------------------------
-
-        if (found_map != NULL) {
-
-            found_map->battles++;
-
-            if (battle->winner_team == battle_player->team) {
-                found_map->wins++;
-            }
-            else {
-                found_map->losses++;
-            }
-        }
-
-        //-----------------------------------
-        // CREATE MAP
-        //-----------------------------------
-
-        else {
-
-            if (found_player->map_count >= MAX_MAPS) {
-                continue;
-            }
-
-            GlobalMapStat *new_map =
-                &found_player->maps[found_player->map_count];
-
-            memset(new_map, 0, sizeof(*new_map));
-
-            strncpy(new_map->name,
-                    battle->map_name,
-                    MAP_LEN - 1);
-
-            new_map->name[MAP_LEN - 1] = '\0';
-
-            new_map->battles = 1;
-
-            if (battle->winner_team == battle_player->team) {
-                new_map->wins = 1;
-            }
-            else {
-                new_map->losses = 1;
-            }
-
-            found_player->map_count++;
-        }
-    }
-}*/
 //-------------------------------------------------------------------------------------------------------------------------------
 
 
