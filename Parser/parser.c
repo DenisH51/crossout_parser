@@ -227,17 +227,121 @@ GlobalMapStat* find_map_global(GlobalPlayerStat *players, const char target_map[
 }
 
 
-bool is_rubish(const char *name){
-    if (!name)
-        return true;
 
-    if (strstr(name, "Wheel") ||
-        strstr(name, "Track") ||
-        strstr(name, "Bumper") ||
-        strstr(name, "CarPart_Junk") ||
-        strstr(name, "Cabin")|| 
-        strstr(name, "Structure")){
+
+//black list
+static const char *RUBBISH_LIST[] = {
+    "Ammo",
+    "Hover",
+    "Engine",
+    "Bumper",
+    "Generator",
+    "Wheel",
+    "Track",
+    "Bumper",
+    "Chassis",
+    "Grid",
+    "Cabin",
+    "PowerGiver",
+    "CarPart_Avia",
+    "Air_Cushion_01",
+    "ModuleAmmo",
+    "MechaLeg",
+    "Radiator",
+    "Radar"
+};
+static const int RUBBISH_COUNT = sizeof(RUBBISH_LIST) / sizeof(RUBBISH_LIST[0]);
+
+bool is_rubish(const char *name){
+    if (!name){
         return true;
+    }
+
+    for (int i = 0; i < RUBBISH_COUNT; i++)
+    {
+        if (strstr(name, RUBBISH_LIST[i]))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//white list
+static const char *WEAPON_LIST[] = {
+    // guns
+    "CarPart_Gun_",
+
+    // artillery / cannons
+    "RapidFire_Artillery",
+    "BigCannon",
+    "Cannon",
+    "Mortar",
+
+    // shotguns
+    "Shotgun",
+    "SawLauncher",
+
+    // machine guns
+    "Machinegun",
+    "SmartMachinegun",
+    "Minigun",
+
+    // rockets / missiles
+    "Rocket",
+    "Missile",
+    "GrenadeLauncher",
+    "RocketLauncher",
+    "HomingMissile",
+    "SurfaceRocket",
+
+    // melee weapons
+    "Drill",
+    "Chainsaw",
+    "Harvester",
+    "Tempura",
+    "Lacerator",
+
+    // energy / special
+    "Laser",
+    "Plasma",
+    "Emitter",
+    "Destructor",
+    "Scorpion",
+    "Kaiju",
+    "Assembler",
+    "TrainWheel_Launcher",
+
+    // flame / electricity
+    "Flamethrower",
+    "Spark",
+    "Tesla",
+
+    // drones / turrets
+    "Drone",
+    "Turret",
+
+    // crossbows
+    "Crossbow",
+    "SniperCrossbow",
+
+    "WheelRocket"
+};
+static const int WEAPON_COUNT = sizeof(WEAPON_LIST) / sizeof(WEAPON_LIST[0]);
+
+
+bool is_weapon(const char *name){
+    if (!name){
+        return true;
+    }
+
+    for (int i = 0; i < WEAPON_COUNT; i++)
+    {
+        if (strstr(name, WEAPON_LIST[i]))
+        {
+            return true;
+        }
     }
 
     return false;
@@ -281,9 +385,20 @@ void create_craft_global(GlobalCraftStat *temp_craft, const Player *player){
 
     //make a list with gun
     for(int i = 0; i < player->weapon_count; i++){
-        if(is_rubish(player->weapons[i].name) == false){
+        //check weapon or not incomprehensible thing
+        bool should_add = false;
 
-            if (temp_craft->weapons_count >= MAX_WEAPONS){
+        if (is_weapon(player->weapons[i].name)){
+            should_add = true;
+        }
+        /*else if (!is_rubish(player->weapons[i].name) && player->weapons[i].hits > 1){
+            should_add = true;
+        }*/
+
+
+        //if weapon add to list
+        if(should_add){
+            if(temp_craft->weapons_count >= MAX_WEAPONS){
                 break;
             }
 
@@ -300,13 +415,13 @@ void create_craft_global(GlobalCraftStat *temp_craft, const Player *player){
             }
 
             //update weapon data
-            found_weapon->total_damage = player->weapons[i].total_damage;
-
-            //buble sort
-            sort_wepons_in_craft(temp_craft);
+            found_weapon->total_damage += player->weapons[i].total_damage;
+            found_weapon->hits += player->weapons[i].hits;
             
         }
     }
+    //buble sort
+    sort_wepons_in_craft(temp_craft);
 }
 
 
@@ -582,7 +697,10 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
             printf("name: '%s'  \n", target_name);
             for(int i = 0; i < temp_craft.weapons_count; i++){
-                printf("              '%s'                 '%9f'\n", temp_craft.weapons[i].name, temp_craft.weapons[i].total_damage);
+                printf("         '%s'           '%9f'       '%d'\n",
+                    temp_craft.weapons[i].name, 
+                    temp_craft.weapons[i].total_damage,
+                    temp_craft.weapons[i].hits);
             }
             printf("\n");
 
