@@ -51,8 +51,28 @@ int main(){
         while ((c = getchar()) != '\n' && c != EOF);
 
 
+
+        
+
+
         if(choice == 1){
-            if (!find_last_folder("C:\\Users\\denwo\\AppData\\Local\\Targem\\Crossout\\logs", path_combat, PATH_LEN)){
+
+            //search user profile
+            char path_in[PATH_LEN];
+
+            const char *userprofile = getenv("USERPROFILE");
+
+            if(userprofile == NULL){
+                printf("Can't get USERPROFILE\n");
+                return 1;
+            }
+
+            snprintf(path_in, PATH_LEN, "%s\\AppData\\Local\\Targem\\Crossout\\logs", userprofile);
+
+
+
+
+            if(!find_last_folder(path_in, path_combat, PATH_LEN)){
                 printf("No folder found\n");
                 continue;
             }
@@ -146,6 +166,8 @@ int main(){
                     process_event(current, &event);
 
                     update_global_stats(&global_stat, current);
+
+                    print_global_stats(&global_stat);
 
                     print_battle(current);
 

@@ -227,8 +227,6 @@ GlobalMapStat* find_map_global(GlobalPlayerStat *players, const char target_map[
 }
 
 
-
-
 //black list
 static const char *RUBBISH_LIST[] = {
     "Ammo",
@@ -363,6 +361,23 @@ void sort_wepons_in_craft(GlobalCraftStat *craft){
     }
 }
 
+void sort_global_players(GlobalStats *global){
+    for(int i = 1; i < global->player_count; i++){
+
+        GlobalPlayerStat tmp = global->players[i];
+
+        int j = i;
+
+        while(j > 0 && global->players[j - 1].battles < tmp.battles){
+
+            global->players[j] = global->players[j - 1];
+            j--;
+        }
+        global->players[j] = tmp;
+    }
+}
+
+
 GlobalWeaponStat* find_global_weapon(GlobalCraftStat *temp_craft, const char target[NAME_LEN], int max){
     for(int i = 0; i < max; i++){
         if(strcmp(temp_craft->weapons[i].name, target) == 0){
@@ -422,6 +437,36 @@ void create_craft_global(GlobalCraftStat *temp_craft, const Player *player){
     }
     //buble sort
     sort_wepons_in_craft(temp_craft);
+}
+
+
+GlobalCraftStat* find_craft_global(GlobalPlayerStat *player, GlobalCraftStat *craft){
+
+    //search by craft
+    for(int i = 0; i < player->craft_count; i++){
+
+        //if lenth of arays not equal -> skip 
+        if(player->crafts[i].weapons_count != craft->weapons_count){
+            continue;
+        }
+
+        //in craft compare weapon name
+        bool is_find_craft = true;
+        for(int j = 0; j < player->crafts[i].weapons_count; j++){
+            if(strcmp(craft->weapons[j].name, player->crafts[i].weapons[j].name) != 0){
+                is_find_craft = false;
+                break;
+            }
+        }
+
+        if(is_find_craft){
+            return &player->crafts[i];
+        }
+    }
+
+
+    return NULL;
+
 }
 
 
@@ -650,9 +695,7 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
 
         //find map by name------------------------------------
-        const char *target_map = battle->map_name;
-
-        GlobalMapStat *found_map = find_map_global(found_player, target_map);
+        GlobalMapStat *found_map = find_map_global(found_player, battle->map_name);
         
         //if found map
         if(found_map != NULL){
@@ -668,52 +711,106 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
         }
         //create new map
         else{
-            if(found_player->map_count >= MAX_MAPS){
+            if(found_player->map_count < MAX_MAPS){
+
+                GlobalMapStat *new_map = &found_player->maps[found_player->map_count];
+
+                memset(new_map, 0, sizeof(*new_map));
+
+                safe_copy_str(new_map->name, battle->map_name, MAP_LEN);
+
+                //update data
+                new_map->battles = 1;
+
+                if (battle->winner_team == battle->players[i].team) {
+                    new_map->wins = 1;
+                }
+                else {
+                    new_map->losses = 1;
+                }
+
+                found_player->map_count++;
+
+            }
+        }    
+
+
+        //find craft by name----------------------------------------------
+        //create set of weapons by cheking is gun, created set inside sort A-Z 
+        GlobalCraftStat temp_craft = {0};
+        create_craft_global(&temp_craft, &battle->players[i]);
+
+        if(temp_craft.weapons_count == 0){
+            continue;
+        }
+
+
+        //debug
+
+        /*printf("name: '%s'  \n", target_name);
+        for(int j = 0; j < temp_craft.weapons_count; j++){
+            printf("         '%s'           '%9.1f'       '%d'\n",
+                temp_craft.weapons[j].name, 
+                temp_craft.weapons[j].total_damage,
+                temp_craft.weapons[j].hits);
+        }
+        printf("\n");*/
+
+        //find neccesery craft 
+        GlobalCraftStat *found_craft = find_craft_global(found_player, &temp_craft);
+
+        
+
+        
+
+        //if craft not found
+        if(found_craft == NULL){
+            if(found_player->craft_count >= MAX_CRAFTS){
                 continue;
             }
-            GlobalMapStat *new_map = &found_player->maps[found_player->map_count];
-
-            memset(new_map, 0, sizeof(*new_map));
-
-            safe_copy_str(new_map->name, battle->map_name, MAP_LEN - 1);
-
-            new_map->battles = 1;
-
-            if (battle->winner_team == battle->players[i].team) {
-                new_map->wins = 1;
-            }
-            else {
-                new_map->losses = 1;
-            }
-
-            found_player->map_count++;
-            
-
-
-            //find craft by name----------------------------------------------
-            //create set of weapons by cheking is gun, created set inside sort A-Z 
-            GlobalCraftStat temp_craft = {0};
-            create_craft_global(&temp_craft, &battle->players[i]);
-
-            printf("name: '%s'  \n", target_name);
-            for(int i = 0; i < temp_craft.weapons_count; i++){
-                printf("         '%s'           '%9f'       '%d'\n",
-                    temp_craft.weapons[i].name, 
-                    temp_craft.weapons[i].total_damage,
-                    temp_craft.weapons[i].hits);
-            }
-            printf("\n");
-
-            //find neccesery craft 
-            //GlobalCraftStat *found_craft = find_craft_global(found_player, temp_craft);
-
-            //if craft not found -> create 
-
-
-
-            //update data 
+            //create new craft for player
+            found_craft = &found_player->crafts[found_player->craft_count];
+            memset(found_craft, 0, sizeof(*found_craft));
+            found_player->craft_count++;
         }
+        
+        //update data     tmp_craft data go to found_craft
+
+        found_craft->weapons_count = temp_craft.weapons_count;
+
+
+        //copy weapon array
+        for(int j = 0; j < temp_craft.weapons_count; j++){
+            safe_copy_str(found_craft->weapons[j].name, temp_craft.weapons[j].name, WEAPON_LEN);
+
+            found_craft->weapons[j].hits += temp_craft.weapons[j].hits;
+            found_craft->weapons[j].total_damage += temp_craft.weapons[j].total_damage;
+
+            found_craft->total_hits += temp_craft.weapons[j].hits;
+        }
+
+        found_craft->battles++;
+
+        if(battle->players[i].team == battle->winner_team){
+            found_craft->wins++;
+        }
+        else{
+            found_craft->losses++;
+        }
+        
+        
+        found_craft->kill += battle->players[i].kills;
+        found_craft->death += battle->players[i].deaths;
+
+        found_craft->total_damage += battle->players[i].damage_dealt;
+        found_craft->total_received += battle->players[i].damage_received;
+
+        found_craft->total_score += battle->players[i].score;
+
+
     }
+
+    sort_global_players(global);
 }
 
 
@@ -1190,3 +1287,66 @@ int find_last_folder(const char *base_path, char *out_path, int max_len) {
 
     return 1;
 }
+
+
+
+void print_global_stats(const GlobalStats *global){
+    printf("\n==============Global stats======================\n");
+
+    double winrate = 0.0;
+
+    for(int i = 0; i < global->player_count; i++){
+        const GlobalPlayerStat *p = &global->players[i];
+
+        winrate = 0.0;
+
+        if (p->battles > 0) {
+            winrate = (p->wins * 100.0) / p->battles;
+        }
+
+        printf("\n====================================\n");
+        printf("PLAYER: %s\n", p->nickname);
+        printf("Battles: %d | Wins: %d | Losses: %d | Winrate: %.2f\n",
+               p->battles, p->wins, p->losses, winrate);
+        printf("Kills: %d | Deaths: %d\n",
+               p->total_kill, p->total_death);
+        printf("Avg Damage: %.1f | Avg Received: %.1f\n",
+               p->total_damage / p->battles,
+               p->total_received / p->battles);
+        printf("Avg Score: %d\n", p->score / p->battles);
+
+        printf("\n  CRAFTS (%d):\n", p->craft_count);
+
+        for(int j = 0; j < p->craft_count; j++)
+        {
+            const GlobalCraftStat *c = &p->crafts[j];
+
+            winrate = 0.0;
+
+            if (c->battles > 0) {
+                winrate = (c->wins * 100.0) / c->battles;
+            }
+            printf("  ----------------------------------\n");
+            printf("  Craft #%d\n", j + 1);
+            printf("  Battles: %d | Wins: %d | Losses: %d | Winrate: %.2f\n",
+                   c->battles, c->wins, c->losses, winrate);
+            printf("  K/D: %d / %d\n", c->kill, c->death);
+            printf("  Avg Damage: %.1f | AvgReceived: %.1f\n",
+                   c->total_damage / c->battles, c->total_received / c->battles);
+            printf("  Avg Score: %d | Avg Hits: %d\n",
+                   c->total_score / c->battles, c->total_hits);
+
+            printf("  Weapons (%d):\n", c->weapons_count);
+
+            for(int k = 0; k < c->weapons_count; k++){
+                printf("    - %s | Avg dmg: %.1f | Avg hits: %d\n",
+                       c->weapons[k].name,
+                       c->weapons[k].total_damage / c->battles,
+                       c->weapons[k].hits / c->battles);
+            }
+        }
+    }
+
+    printf("\n====================================\n");
+}
+
