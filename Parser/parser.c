@@ -636,6 +636,594 @@ void process_score(Battle_record *battle, Event *event){
     p->score += event->data.score.value;
 }
 
+
+
+//--------------------------------------------------------------------------------------------------------------
+
+
+void generate_empty_html(void){
+    FILE *file1 = fopen("stats.html", "w");
+
+    if (file1 == NULL) {
+        printf("Can't create html file\n");
+        return;
+    }
+
+    fprintf(file1,
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<head>\n"
+        "<meta charset='UTF-8'>\n"
+        "<meta http-equiv='refresh' content='5'>\n"
+        "<title>Crossout Stats</title>\n"
+
+        "<style>\n"
+        "body { font-family: Arial; background:#111; color:#eee; margin:0; }\n"
+        ".container { width:1200px; margin:0 auto; padding:10px; }\n"
+        ".box { margin-top:20px; padding:15px; border:1px solid #333; background:#151515; border-radius:6px; }\n"
+        "h1 { color:#aaa; margin:0 0 10px 0; }\n"
+        "p { color:#777; }\n"
+        "</style>\n"
+
+        "</head>\n"
+        "<body>\n"
+
+        "<div class='container'>\n"
+        "<div class='box'>\n"
+        "<h1>Crossout Stats</h1>\n"
+        "<p>Waiting for battle...</p>\n"
+        "</div>\n"
+        "</div>\n"
+
+        "</body>\n"
+        "</html>\n"
+    );
+
+    fclose(file1);
+}
+
+
+
+
+void regenerate_html_report(GlobalStats *global_stats, Battle_record *battles, int battle_count)
+{
+    FILE *f = fopen("stats.html", "w");
+    if (!f) {
+        printf("Can't open html file\n");
+        return;
+    }
+
+    fprintf(f,
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<head>\n"
+        "<meta charset='UTF-8'>\n"
+        "<style>\n"
+
+            "body {"
+            "font-family: Arial;"
+            "background: #0f1116;"
+            "color: #e6e6e6;"
+            "margin: 0;"
+            "}\n"
+
+            ".container {"
+            "width: 1200px;"
+            "margin: 0 auto;"
+            "padding: 12px;"
+            "}\n"
+
+            /* ===== TITLE ===== */
+            ".title {"
+            "font-size: 22px;"
+            "font-weight: 600;"
+            "margin: 10px 0 15px 0;"
+            "color: #9aa4b2;"
+            "letter-spacing: 0.5px;"
+            "}\n"
+            
+            //table 1------------------------------------
+            /* ===== TABLE WRAPPER ===== */
+            ".table_box {"
+            "border: 1px solid #2a2f3a;"
+            "border-radius: 10px;"
+            "background: #151923;"
+            "max-height: 80vh;"
+            "overflow-y: auto;"
+            "box-shadow: 0 0 20px rgba(0,0,0,0.35);"
+            "}\n"
+
+            /* ===== GRID ROW ===== */
+            ".row {"
+            "display: grid;"
+            "grid-template-columns: 260px 80px 80px 80px 120px 140px 140px 120px;"
+            "align-items: center;"
+            "padding: 8px 10px;"
+            "border-bottom: 1px solid #242a36;"
+            "transition: background 0.2s;"
+            "}\n"
+
+            /* hover эффект */
+            ".row:hover {"
+            "background: #1b2130;"
+            "}\n"
+
+            /* ===== HEADER ===== */
+            ".global_header {"
+            "position: sticky;"
+            "top: 0;"
+            "background: #10141c;"
+            "z-index: 10;"
+            "font-weight: 600;"
+            "color: #b6c2d1;"
+            "border-bottom: 2px solid #2f3a4a;"
+            "}\n"
+
+            /* ===== PLAYER ===== */
+            ".player {"
+            "margin-bottom: 14px;"
+            "padding: 10px;"
+            "border: 1px solid #2a2f3a;"
+            "background: #141826;"
+            "border-radius: 10px;"
+            "}\n"
+
+            /* ===== CRAFT ===== */
+            ".craft {"
+            "background: #121628;"
+            "border-left: 3px solid #3a7bd5;"
+            "}\n"
+
+            /* ===== WEAPONS ===== */
+            ".weapon {"
+            "margin-left: 35px;"
+            "color: #9aa4b2;"
+            "font-size: 13px;"
+            "}\n"
+
+            //table 2----------------------------------------
+            ".battle_table {"
+            "border: 1px solid #2a2f3a;"
+            "border-radius: 10px;"
+            "background: #151923;"
+            "max-height: 80vh;"
+            "overflow-y: auto;"
+            "box-shadow: 0 0 20px rgba(0,0,0,0.35);"
+            "margin-top: 15px;"
+            "}\n"
+
+            ".battle_card {"
+            "padding: 12px;"
+            "border-bottom: 1px solid #242a36;"
+            "}\n"
+
+            ".battle_info {"
+            "padding: 10px;"
+            "margin-bottom: 10px;"
+            "background: #10141c;"
+            "border-left: 3px solid #3a7bd5;"
+            "color: #cfd6e1;"
+            "font-size: 14px;"
+            "}\n"
+
+            ".team_header {"
+            "margin-top: 10px;"
+            "padding: 6px 10px;"
+            "background: #1b2130;"
+            "color: #9aa4b2;"
+            "font-weight: 600;"
+            "}\n"
+
+            ".battle_row {"
+            "display: grid;"
+            "grid-template-columns: 260px 80px 80px 80px 100px 140px 140px 100px;"
+            "padding: 6px 10px;"
+            "border-bottom: 1px solid #1f2633;"
+            "align-items: center;"
+            "}\n"
+
+            ".battle_row:hover {"
+            "background: #1b2130;"
+            "}\n"
+
+            ".battle_weapon {"
+            "margin-left: 35px;"
+            "color: #9aa4b2;"
+            "font-size: 13px;"
+            "padding: 2px 0;"
+            "}\n"
+
+            ".battle_card {"
+            "padding: 12px;"
+            "border-bottom: 1px solid #242a36;"
+            "display: flex;"
+            "flex-direction: column;"
+            "gap: 6px;"
+            "}\n"
+
+            ".battle_global_header {"
+            "position: sticky;"
+            "top: 0;"
+
+            "background: #10141c;"
+            "z-index: 10;"
+
+            "font-weight: 600;"
+            "color: #b6c2d1;"
+
+            "border-bottom: 2px solid #2f3a4a;"
+            "}\n"
+
+            ".battle_header {"
+            "display: grid;"
+            "grid-template-columns: 260px 80px 80px 80px 100px 140px 140px 100px;"
+            "padding: 8px 10px;"
+            "font-weight: 600;"
+            "background: #10141c;"
+            "color: #b6c2d1;"
+            "border-bottom: 2px solid #2f3a4a;"
+            "position: sticky;"
+            "top: 0;"
+            "z-index: 5;"
+            "}\n"
+
+            ".team_win {"
+            "background: rgba(0, 255, 120, 0.08);"
+            "border-left: 3px solid #2ecc71;"
+            "}\n"
+
+            ".team_lose {"
+            "background: rgba(255, 60, 60, 0.06);"
+            "border-left: 3px solid #e74c3c;"
+            "}\n"
+
+
+            ".battle_slide {"
+            "display: none;"
+            "}\n"
+
+            ".battle_slide.active {"
+            "display: block;"
+            "}\n"
+
+
+            ".battle_nav {"
+            "display: flex;"
+            "justify-content: center;"
+            "align-items: center;"
+            "gap: 10px;"
+
+            "margin: 10px 0;"
+            "}\n"
+
+            ".battle_nav button {"
+            "background: #1b2130;"
+            "border: 1px solid #2a2f3a;"
+            "color: #cfd6e1;"
+            "padding: 5px 12px;"
+            "cursor: pointer;"
+            "border-radius: 6px;"
+            "}\n"
+
+            ".battle_nav button:hover {"
+            "background: #2a3446;"
+            "}\n"
+
+
+            
+
+        "</style>\n"
+        "</head>\n"
+        "<body>\n"
+        "<div class='container'>\n"
+
+        "<div class='title'>Stats by Players</div>\n"
+
+        "<div class='table_box'>\n"
+
+        
+    );
+
+    //table 1 
+        /* ================= HEADER ================= */
+        fprintf(f,
+            "<div class='row global_header'>"
+            "<div>PLAYER</div>"
+            "<div>Battle</div>"
+            "<div>Win</div>"
+            "<div>Loss</div>"
+            "<div>Winrate</div>"
+            "<div>Damage</div>"
+            "<div>Recive</div>"
+            "<div>Score</div>"
+            "</div>"
+        );
+
+        /* ================= PLAYERS ================= */
+        for (int i = 0; i < global_stats->player_count; i++)
+        {
+            GlobalPlayerStat *p = &global_stats->players[i];
+
+            double p_wr = (p->battles ? (p->wins * 100.0) / p->battles : 0);
+            double p_dmg = (p->battles ? p->total_damage / p->battles : 0);
+            double p_rec = (p->battles ? p->total_received / p->battles : 0);
+            double p_scr = (p->battles ? (double)p->score / p->battles : 0);
+
+            fprintf(f,
+                "<div class='player'>"
+                "<div class='row'>"
+                "<div><b>%s</b></div>"
+                "<div>%d</div>"
+                "<div>%d</div>"
+                "<div>%d</div>"
+                "<div>%.1f%%</div>"
+                "<div>%.1f</div>"
+                "<div>%.1f</div>"
+                "<div>%.1f</div>"
+                "</div>",
+                p->nickname,
+                p->battles,
+                p->wins,
+                p->losses,
+                p_wr,
+                p_dmg,
+                p_rec,
+                p_scr
+            );
+
+            /* ================= CRAFTS ================= */
+            for (int j = 0; j < p->craft_count; j++)
+            {
+                GlobalCraftStat *c = &p->crafts[j];
+
+                double c_wr = (c->battles ? (c->wins * 100.0) / c->battles : 0);
+                double c_scr = (c->battles ? (double)c->total_score / c->battles : 0);
+
+                fprintf(f,
+                    "<div class='row craft'>"
+                    "<div>CRAFT #%d</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%.1f%%</div>"
+                    "<div>%.1f</div>"
+                    "<div>%.1f</div>"
+                    "<div>%.1f</div>"
+                    "</div>",
+                    j + 1,
+                    c->battles,
+                    c->wins,
+                    c->losses,
+                    c_wr,
+                    c->total_damage,
+                    c->total_received,
+                    c_scr
+                );
+
+                /* ================= WEAPONS ================= */
+                for (int k = 0; k < c->weapons_count; k++)
+                {
+                    GlobalWeaponStat *w = &c->weapons[k];
+
+                    fprintf(f,
+                        "<div class='weapon'>"
+                        "↳ %s | dmg:%.1f | hits:%d"
+                        "</div>",
+                        w->name,
+                        w->total_damage,
+                        w->hits
+                    );
+                }
+            }
+
+            fprintf(f, "</div>");
+        }
+
+        fprintf(f,"</div>");   /* table_box */
+       
+    //End table 1 
+
+    //table 2
+        fprintf(f,
+            "<div class='title'>Battles</div>"
+            "<div class='battle_nav'>"
+                "<button onclick='prevBattle()'><</button>"
+                "<span id='battleIndex'>1 / %d</span>"
+                "<button onclick='nextBattle()'>></button>"
+            "</div>"
+            "<div class='battle_table'>",
+            battle_count
+        );
+
+        fprintf(f,
+            "<div class='row battle_header'>"
+            "<div>Player</div>"
+            "<div>Kill</div>"
+            "<div>Death</div>"
+            "<div>Bot</div>"
+            "<div>Team</div>"
+            "<div>Damage</div>"
+            "<div>Recive</div>"
+            "<div>Score</div>"
+            "</div>"
+        );
+
+        for (int b = 0; b < battle_count; b++)
+        {
+
+            Battle_record *bt = &battles[b];
+
+            fprintf(f,
+                "<div class='battle_card'>"
+
+                "<div class='battle_info'>"
+                "<b>Map:</b> %s | "
+                "<b>Mode:</b> %s | "
+                "<b>Time:</b> %.1f sec | "
+                "<b>Winner:</b> Team %d"
+                "</div>",
+
+                bt->map_name,
+                bt->battle_type,
+                bt->battle_time,
+                bt->winner_team
+            );
+
+
+            /* ================= TEAM 1 ================= */
+            fprintf(f,
+                "<div class='team_header %s'>TEAM 1</div>",
+                (bt->winner_team == 1) ? "team_win" : "team_lose"
+            );
+
+            for (int i = 0; i < bt->player_count; i++)
+            {
+                Player *p = &bt->players[i];
+                if (p->team != 1) continue;
+
+                fprintf(f,
+                    "<div class='battle_row'>"
+                    "<div>%s</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%.1f</div>"
+                    "<div>%.1f</div>"
+                    "<div>%d</div>"
+                    "</div>",
+
+                    p->nickname,
+                    p->kills,
+                    p->deaths,
+                    p->is_bot,
+                    p->team,
+                    p->damage_dealt,
+                    p->damage_received,
+                    p->score
+                );
+
+                for (int w = 0; w < p->weapon_count; w++)
+                {
+                    WeaponStat *weapon = &p->weapons[w];
+
+                    fprintf(f,
+                        "<div class='battle_weapon'>"
+                        "↳ %s | dmg: %.1f | hits: %d"
+                        "</div>",
+                        weapon->name,
+                        weapon->total_damage,
+                        weapon->hits
+                    );
+                }
+            }
+
+            /* ================= TEAM 2 ================= */
+            fprintf(f,
+                "<div class='team_header %s'>TEAM 2</div>",
+                (bt->winner_team == 2) ? "team_win" : "team_lose"
+            );
+
+            for (int i = 0; i < bt->player_count; i++)
+            {
+                Player *p = &bt->players[i];
+                if (p->team != 2) continue;
+
+                fprintf(f,
+                    "<div class='battle_row'>"
+                    "<div>%s</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%d</div>"
+                    "<div>%.1f</div>"
+                    "<div>%.1f</div>"
+                    "<div>%d</div>"
+                    "</div>",
+
+                    p->nickname,
+                    p->kills,
+                    p->deaths,
+                    p->is_bot,
+                    p->team,
+                    p->damage_dealt,
+                    p->damage_received,
+                    p->score
+                );
+
+                for (int w = 0; w < p->weapon_count; w++)
+                {
+                    WeaponStat *weapon = &p->weapons[w];
+
+                    fprintf(f,
+                        "<div class='battle_weapon'>"
+                        "↳ %s | dmg: %.1f | hits: %d"
+                        "</div>",
+                        weapon->name,
+                        weapon->total_damage,
+                        weapon->hits
+                    );
+                }
+            }
+
+            fprintf(f, "</div>"); // battle_card CLOSED HERE
+        }
+
+        fprintf(f, "</div>"); // battle_table
+    //end table 2
+
+    
+    //end of file
+    fprintf(f,  
+        "</div>"
+    );
+
+    fprintf(f,
+        "<script>"
+        "document.addEventListener('DOMContentLoaded', function() {"
+
+            "let currentBattle = 0;"
+            "const battles = document.querySelectorAll('.battle_card');"
+
+            "if (battles.length === 0) return;"
+
+            "function showBattle(index) {"
+                "battles.forEach((b, i) => {"
+                    "b.style.display = (i === index) ? 'flex' : 'none';"
+                "});"
+
+                "document.getElementById('battleIndex').innerText = "
+                    "(index + 1) + ' / ' + battles.length;"
+            "}"
+
+            "window.nextBattle = function() {"
+                "if (currentBattle < battles.length - 1) {"
+                    "currentBattle++;"
+                    "showBattle(currentBattle);"
+                "}"
+            "};"
+
+            "window.prevBattle = function() {"
+                "if (currentBattle > 0) {"
+                    "currentBattle--;"
+                    "showBattle(currentBattle);"
+                "}"
+            "};"
+
+            "showBattle(0);"
+
+        "});"
+        "</script>"
+        );
+
+    fprintf(f,
+        "</body>"
+        "</html>"
+    );/* container */
+
+    fclose(f);
+}
+
 void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
     for(int i = 0; i < battle->player_count; i++){
@@ -812,13 +1400,6 @@ void update_global_stats(GlobalStats *global, const Battle_record *battle){
 
     sort_global_players(global);
 }
-
-
-
-
-
-//-------------------------------------------------------------------------------------------------------------------------------
-
 
 //take 1 line read and identify which event is this and back name event to main 
 Event identify_line(const char *line){

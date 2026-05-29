@@ -6,6 +6,7 @@
     #include <stdbool.h>
     #include <stdlib.h>
     #include <windows.h>
+    #include <shellapi.h>
 
     #define NAME_LEN 64
     #define MAP_LEN 64
@@ -159,7 +160,6 @@
 
         int kills;
         int deaths;
-        int assists;
         int spawn_counter;
         int score;
 

@@ -93,8 +93,13 @@ int main(){
             file = fopen(path_combat, "r");
 
             if (!file) {
-                printf("Can't open file\n");
+                strncat(path_combat, "\\combat.log", sizeof(path_combat) - strlen(path_combat) - 1);
+                file = fopen(path_combat, "r");
+                if(!file){
+                    printf("Can't open file\n");
+                }
             }
+            
         }
 
         else {
@@ -105,9 +110,18 @@ int main(){
 
     printf("Open file by path: %s\n", path_combat);
     
+    //write empty file
+    generate_empty_html();
 
-
-
+    //open brouser
+    ShellExecute(
+    NULL,
+    "open",
+    "stats.html",
+    NULL,
+    NULL,
+    SW_SHOWNORMAL);
+    
 
     //read by line
     char line[LINE_LEN];
@@ -162,16 +176,20 @@ int main(){
             // GAMEPLAY END
             else if (event.type == EVENT_TYPE_GAMEPLAY_END) {
 
-                if (current != NULL) {
+                if (current != NULL){
                     process_event(current, &event);
 
                     update_global_stats(&global_stat, current);
 
                     print_global_stats(&global_stat);
-
                     print_battle(current);
 
+                    battle_records[battle_count] = *current;
                     battle_count++;
+                    
+                    regenerate_html_report(&global_stat, battle_records, battle_count);
+
+                    
                     current = NULL;
                 }
                 
