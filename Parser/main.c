@@ -43,7 +43,7 @@ int main(){
     while(file == NULL){
         int choice;
 
-        printf("\n1 - auto find log\n");
+        printf("\n1 - auto find latest log\n");
         printf("2 - manual path\n");
         printf("choose: ");
         scanf("%d", &choice);
@@ -86,7 +86,7 @@ int main(){
         
         else if(choice == 2){
 
-            printf("Enter full path: ");
+            printf("Enter full path as(C:\\Users\\UserName\\AppData\\Local\\Targem\\Crossout\\logs\\2026.05.07 09.58.30): \n");
             fgets(path_combat, PATH_LEN, stdin);
             path_combat[strcspn(path_combat, "\n")] = 0;
 
