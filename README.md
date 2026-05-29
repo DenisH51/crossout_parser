@@ -1,4 +1,50 @@
-----------------------------------------How run Prog---------------------------------------------------------
+----------------------------------------How run Prog----------------------------------------------------------
+Before using the parser, you need to enable combat logs in Crossout.
+
+1. 
+Add one of these launch parameters to the game launcher shortcut:
+
+--cvar cl_combatLog 1
+
+If it does not work, try:
+
++set cl_combatLog 1
+
+Add the parameter to the launcher shortcut properties as shown below.
+
+(screenshot here)
+
+2.
+Launch Crossout normally and wait until enter.
+
+3. Run the parser
+
+Download and start Parser.exe.
+
+After launch, a console window will appear with two options:
+
+1 - auto find latest log
+2 - manual path
+Option 1 — Automatic log detection by path C:\Users\{UserName}\AppData\Local\Targem\Crossout\logs\{DATE}
+
+The program automatically searches for the newest Crossout combat log.
+
+Option 2 — Manual path
+
+You can manually enter the path to a specific log folder.
+
+Example:
+
+C:\Users\User\AppData\Local\Targem\Crossout\logs\2026.05.07 09.58.30
+4. Open live statistics
+
+After the parser starts:
+
+the HTML report is generated automatically,
+the browser opens stats.html,
+statistics update after each battle.
+
+Now you can simply alt-tab after a match and instantly view battle statistics.
 
 
 ----------------------------------Project Story & Development-------------------------------------------------
