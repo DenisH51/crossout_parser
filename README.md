@@ -62,9 +62,9 @@ So I decided to build a tool that automatically parses these logs and turns them
 ________________________________________
 🖥️ Dashboard preview
 
-![Dashboard](images/dashboard.png)
+![players_stats](images/players_stats.png)
 
-![Battle](images/battle.png)
+![battles](images/battles.png)
 
  
 
