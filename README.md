@@ -1,52 +1,85 @@
-----------------------------------------How run Program?---------------------------------------------------------
+----------------------------------------How to run Program?---------------------------------------------------------
+
 
 Before using the parser, you need to enable combat logs in Crossout.
 
-1.  Create parametr in launcher
+---
 
-Add one of these launch parameters to the game launcher shortcut:
+## 1. Enable combat logs
 
+Right-click the Crossout launcher shortcut:
+
+```text id="v0b96q"
+Properties → Target
+```
+
+Add one of these launch parameters:
+
+```text id="8a9vhq"
 --cvar cl_combatLog 1
+```
 
 If it does not work, try:
 
+```text id="vtr8yq"
 +set cl_combatLog 1
-
-Add the parameter to the launcher shortcut properties as shown below.
-
- (screenshot here)
-
-2.
-Launch Crossout normally and wait until you enter in game.
-
-3. Run the parser
-
-Download and start Parser.exe.
-
-After launch, a console window will appear with two options:
-
-1 - auto find latest log
-2 - manual path
-Option 1 — Automatic log detection by path C:\Users\{UserName}\AppData\Local\Targem\Crossout\logs\{DATE}
-
-The program automatically searches for the newest Crossout combat log.
-
-Option 2 — Manual path
-
-You can manually enter the path to a specific log folder.
+```
 
 Example:
 
-C:\Users\User\AppData\Local\Targem\Crossout\logs\2026.05.07 09.58.30
-4. Open live statistics
+![create_parametr](images/create_parametr.png)
+
+---
+
+## 2. Start the game
+
+Launch Crossout normally and enter the game.
+
+The game will now start generating combat logs automatically.
+
+---
+
+## 3. Run the parser
+
+Download:
+
+```text id="t2dd6e"
+release/Parser.exe
+```
+
+and run `Parser.exe`.
+
+After launch, a console window will appear with two options:
+
+```text id="9nwrdo"
+1 - auto find latest log
+2 - manual path
+```
+
+### Option 1
+
+Automatically searches for the newest combat log:
+
+```text id="x5a6e8"
+C:\Users\{UserName}\AppData\Local\Targem\Crossout\logs\{DATE}
+```
+
+### Option 2
+
+Allows you to manually enter the path to a specific log folder.
+
+---
+
+## 4. Open live statistics
 
 After the parser starts:
 
-the HTML report is generated automatically,
-the browser opens stats.html,
-statistics update after each battle.
+* an HTML report is generated automatically,
+* `stats.html` opens in the browser,
+* statistics update after each battle.
 
-Now you can simply alt-tab after a match and instantly view battle statistics.
+Now you can simply alt-tab after a match and instantly view your battle statistics.
+
 
 
 --------------------------------------Project Story & Development-------------------------------------------------
