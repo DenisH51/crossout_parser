@@ -1,21 +1,21 @@
-----------------------------------------How run Prog----------------------------------------------------------
+----------------------------------------How run Program?----------------------------------------------------------
 Before using the parser, you need to enable combat logs in Crossout.
 
 1. 
-Add one of these launch parameters to the game launcher shortcut:
+ Add one of these launch parameters to the game launcher shortcut:
 
---cvar cl_combatLog 1
+ --cvar cl_combatLog 1
 
-If it does not work, try:
+ If it does not work, try:
 
-+set cl_combatLog 1
+ +set cl_combatLog 1
 
-Add the parameter to the launcher shortcut properties as shown below.
+ Add the parameter to the launcher shortcut properties as shown below.
 
-(screenshot here)
+ (screenshot here)
 
 2.
-Launch Crossout normally and wait until enter.
+Launch Crossout normally and wait until you enter in game.
 
 3. Run the parser
 
