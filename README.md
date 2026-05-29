@@ -62,7 +62,9 @@ So I decided to build a tool that automatically parses these logs and turns them
 ________________________________________
 🖥️ Dashboard preview
 
+![Dashboard](images/dashboard.png)
 
+![Battle](images/battle.png)
 
  
 
@@ -88,7 +90,8 @@ Then I started designing the core logic:
 I decided to process the log line-by-line and convert each event into structured data stored in custom structs. After that, everything is aggregated into final statistics.
 ________________________________________ 🧠 Key idea
 Each line in the log represents an event.
- 
+ ![structure_log](images/structure_log.png)
+
 The program:
 •	reads the event
 •	identifies its type
