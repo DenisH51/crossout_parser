@@ -2,16 +2,17 @@
 
 Before using the parser, you need to enable combat logs in Crossout.
 
-1. 
- Add one of these launch parameters to the game launcher shortcut:
+1.  Create parametr in launcher
 
- --cvar cl_combatLog 1
+Add one of these launch parameters to the game launcher shortcut:
 
- If it does not work, try:
+--cvar cl_combatLog 1
 
- +set cl_combatLog 1
+If it does not work, try:
 
- Add the parameter to the launcher shortcut properties as shown below.
++set cl_combatLog 1
+
+Add the parameter to the launcher shortcut properties as shown below.
 
  (screenshot here)
 
@@ -60,6 +61,7 @@ While playing Crossout, I realized that the game already provides detailed battl
 So I decided to build a tool that automatically parses these logs and turns them into readable statistics so I can simply alt-tab after a match and see my performance.
 ________________________________________
 🖥️ Dashboard preview
+
 
 
  
